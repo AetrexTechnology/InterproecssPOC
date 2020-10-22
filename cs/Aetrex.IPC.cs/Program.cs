@@ -12,17 +12,26 @@ namespace Aetrex.IPC.cs
     {
         static void Main(string[] args)
         {
+            IPCClient client = null;
+
             if (args.Length > 0 && args[0] == "server")
             {
                 IPCServer server = new IPCServer();
             } 
             else
             {
-                IPCClient client = new IPCClient(true);                    
+                client = new IPCClient();
+                client.CommunicateWithService();
             }            
 
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();
+            
+            if (client != null)
+            {
+                Console.WriteLine("Closing the connection to the service");
+                client.Close();
+            }
         }        
 
     }

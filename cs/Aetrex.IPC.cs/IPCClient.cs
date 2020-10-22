@@ -5,16 +5,20 @@ using System.IO.Pipes;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Aetrex.IPC.cs
 {
     internal class IPCClient
     {
-        private static int numClients = 4;
         private Process IPCServerProcess = null;
+        private CancellationTokenSource tokenSource;
+        private NamedPipeClientStream pipeClient;
 
-        public IPCClient(bool spawnclient)
+        public IPCClient()
         {
+            tokenSource = new CancellationTokenSource();
+
             //Create a Windows job object, register this process to the job so on job termination, this process and its child processes will terminate by Windows OS
             JobManagement.Job job = new JobManagement.Job();
             job.AddProcess(Process.GetCurrentProcess().Id);
@@ -25,47 +29,46 @@ namespace Aetrex.IPC.cs
             IPCServerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             IPCServerProcess.Start();
 
-            if (spawnclient)
+            pipeClient =
+                new NamedPipeClientStream(".", "testpipe",
+                    PipeDirection.InOut, PipeOptions.None,
+                    TokenImpersonationLevel.Impersonation);
+
+        }
+
+        public void CommunicateWithService()
+        {
+            var token = tokenSource.Token;
+
+            Console.WriteLine("Connecting to server...\n");
+            pipeClient.Connect();
+
+            StreamString ss = new StreamString(pipeClient);
+
+            Task.Run(() =>
             {
-                var pipeClient =
-                    new NamedPipeClientStream(".", "testpipe",
-                        PipeDirection.InOut, PipeOptions.None,
-                        TokenImpersonationLevel.Impersonation);
-
-                Console.WriteLine("Connecting to server...\n");
-                pipeClient.Connect();
-
-                StreamString ss = new StreamString(pipeClient);
-                // Validate the server's signature string.
-                if (ss.ReadString(64) == "I am the one true server!")
+                // polling boolean property
+                while (!token.IsCancellationRequested)
                 {
-                    // The client security token is sent with the first write.
-                    // Send the name of the file whose contents are returned
-                    // by the server.
-                    ss.WriteStringFixed("Message from client");
+                    //token.ThrowIfCancellationRequested(); // throw OperationCancelledException if requested
 
-                    // Print the file to the screen.
+                    //Wait for a message from the service
                     Console.WriteLine(ss.ReadString(64));
+
+                    //Responds to the service
+                    ss.WriteStringFixed("Message from client");                    
                 }
-                else
-                {
-                    Console.WriteLine("Server could not be verified.");
-                }
+                // release resources and exit
                 pipeClient.Close();
                 // Give the client process some time to display results before exiting.
                 Thread.Sleep(4000);
-                /*
-                Console.WriteLine("Pipe Server closing");
-                IPCServerProcess.Close();
-                Console.WriteLine("Pipe Server closed");
 
-                Console.WriteLine("Pipe Server process disposing");
-                IPCServerProcess.Dispose();
-                Console.WriteLine("Pipe Server process disposed");
+            }, token);
+        }
 
-                IPCServerProcess = null;
-                */
-            }            
-        }        
+        public void Close()
+        {
+            tokenSource.Cancel();
+        }
     }    
 }
