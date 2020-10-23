@@ -26,7 +26,7 @@ namespace Aetrex.IPC.cs
             const string IPCServer = "Aetrex.IPCCPP.Server.exe";
             IPCServerProcess = new Process();
             IPCServerProcess.StartInfo.FileName = IPCServer;
-            IPCServerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            IPCServerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
             IPCServerProcess.Start();
 
             pipeClient =

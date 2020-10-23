@@ -18,5 +18,22 @@
     <ClCompile Include="Aetrex.IPCCPP.Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="original.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vasim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="original.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vasim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
