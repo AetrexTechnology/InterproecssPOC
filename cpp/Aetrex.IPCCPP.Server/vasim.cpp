@@ -63,6 +63,8 @@ int vasim::Init()
                 //printf("Getting overlap result\n");
 
                 //GetOverlappedResult fires hConnectEvent
+                //From https://docs.microsoft.com/en-us/windows/win32/sync/synchronization-and-overlapped-input-and-output
+                //The system sets the state of the event object to signaled when the operation has been completed. 
                 fSuccess = GetOverlappedResult(
                     m_hPipe,     // pipe handle 
                     &oConnect, // OVERLAPPED structure 
@@ -103,19 +105,8 @@ int vasim::Init()
                 std::this_thread::sleep_for(std::chrono::milliseconds(4000));
             }
             
-            /*
-            // Start the read operation for this client. 
-            // Note that this same routine is later used as a 
-            // completion routine after a write operation. 
-
-            lpPipeInst->cbToWrite = 0;
-            CompletedWriteRoutine(0, 0, (LPOVERLAPPED)lpPipeInst);
-
-            // Create new pipe instance for the next client. 
-
-            fPendingIO = CreateAndConnectInstance(&oConnect);
-            */            
-
+            FetchMessageFromClient((LPOVERLAPPED)lpPipeInst);
+            
             break;
 
             // The wait is satisfied by a completed read or write 
@@ -171,65 +162,46 @@ VOID WINAPI vasim::CompletedWriteRoutine(DWORD dwErr, DWORD cbWritten, LPOVERLAP
 {
     printf("CompletedWriteRoutine()\n");
     LPPIPEINST lpPipeInst;
+
+    // lpOverlap points to storage for this instance. 
+    lpPipeInst = (LPPIPEINST)lpOverLap;
+    
+}
+
+VOID vasim::FetchMessageFromClient(LPOVERLAPPED lpOverLap)
+{
+    LPPIPEINST lpPipeInst;
     BOOL fRead = FALSE;
 
     // lpOverlap points to storage for this instance. 
-
     lpPipeInst = (LPPIPEINST)lpOverLap;
-    /*
-    // The write operation has finished, so read the next request (if 
-    // there is no error). 
 
-    if ((dwErr == 0) && (cbWritten == lpPipeInst->cbToWrite))
-    {
-        printf("CompletedWriteRoutine() Getting client message\n");
-        fRead = ReadFileEx(
-            lpPipeInst->hPipeInst,
-            lpPipeInst->chRequest,
-            BUFSIZE * sizeof(TCHAR),
-            (LPOVERLAPPED)lpPipeInst,
-            (LPOVERLAPPED_COMPLETION_ROUTINE)CompletedReadRoutine);
-    }
+    fRead = ReadFileEx(
+        lpPipeInst->hPipeInst,
+        lpPipeInst->chRequest,
+        BUFSIZE * sizeof(TCHAR),
+        (LPOVERLAPPED)lpPipeInst,
+        (LPOVERLAPPED_COMPLETION_ROUTINE)CompletedReadRoutine);
+
     // Disconnect if an error occurred. 
-
     if (!fRead)
+    {
         DisconnectAndClose(lpPipeInst);
-    */
+    }    
 }
-
 // CompletedReadRoutine(DWORD, DWORD, LPOVERLAPPED) 
 // This routine is called as an I/O completion routine after reading 
 // a request from the client. It gets data and writes it to the pipe. 
 
 VOID WINAPI vasim::CompletedReadRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap)
 {
+    printf("CompletedReadRoutine()\n");
     LPPIPEINST lpPipeInst;
-    BOOL fWrite = FALSE;
 
     // lpOverlap points to storage for this instance. 
-
     lpPipeInst = (LPPIPEINST)lpOverLap;
-
-    // The read operation has finished, so write a response (if no 
-    // error occurred). 
-
-    if ((dwErr == 0) && (cbBytesRead != 0))
-    {
-        GetAnswerToRequest(lpPipeInst);
-
-        printf("CompletedReadRoutine() posting client message\n");
-        fWrite = WriteFileEx(
-            lpPipeInst->hPipeInst,
-            lpPipeInst->chReply,
-            lpPipeInst->cbToWrite,
-            (LPOVERLAPPED)lpPipeInst,
-            (LPOVERLAPPED_COMPLETION_ROUTINE)CompletedWriteRoutine);
-    }
-
-    // Disconnect if an error occurred. 
-
-    if (!fWrite)
-        DisconnectAndClose(lpPipeInst);
+    
+    wprintf(L"%s\n",lpPipeInst->chRequest);
 }
 
 // DisconnectAndClose(LPPIPEINST) 
@@ -325,11 +297,4 @@ BOOL vasim::ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo)
     }
     }
     return fPendingIO;
-}
-
-VOID vasim::GetAnswerToRequest(LPPIPEINST pipe)
-{
-    _tprintf(TEXT("[%d] %s\n"), pipe->hPipeInst, pipe->chRequest);
-    StringCchCopy(pipe->chReply, BUFSIZE, TEXT("Default answer from server"));
-    pipe->cbToWrite = (lstrlen(pipe->chReply) + 1) * sizeof(TCHAR);
 }

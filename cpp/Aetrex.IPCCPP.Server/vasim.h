@@ -18,6 +18,7 @@ private:
 	static VOID WINAPI CompletedReadRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLAPPED lpOverLap);
 	static VOID DisconnectAndClose(LPPIPEINST lpPipeInst);
 	VOID PostMessageToClient(LPOVERLAPPED lpOverLap, STRSAFE_LPCWSTR message);
+	VOID FetchMessageFromClient(LPOVERLAPPED lpOverLap);
 	BOOL CreateAndConnectInstance(LPOVERLAPPED lpoOverlap);
 	BOOL ConnectToNewClient(HANDLE hPipe, LPOVERLAPPED lpo);
 	static VOID GetAnswerToRequest(LPPIPEINST pipe);

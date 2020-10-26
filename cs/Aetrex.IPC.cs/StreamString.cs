@@ -35,7 +35,7 @@ namespace Aetrex.IPC.cs
             ioStream.Read(inBuffer, 0, len);
 
             string serverMessage = streamEncoding.GetString(inBuffer).Trim('\0');
-            Console.WriteLine($"Server message: {serverMessage}");
+            //Console.WriteLine($"Server message: {serverMessage}");
             return serverMessage;
         }
 
