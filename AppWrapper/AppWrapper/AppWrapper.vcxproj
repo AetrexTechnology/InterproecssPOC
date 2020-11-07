@@ -149,6 +149,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AppWrapper.cpp" />
+    <ClCompile Include="NamedPipeClient.cpp" />
+    <ClCompile Include="NamedPipeServer.cpp" />
+    <ClCompile Include="ScannerCommunication.cpp" />
+    <ClCompile Include="TwoWayCommunicator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="NamedPipeClient.h" />
+    <ClInclude Include="NamedPipeServer.h" />
+    <ClInclude Include="ScannerCommunication.h" />
+    <ClInclude Include="TwoWayCommunicator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
