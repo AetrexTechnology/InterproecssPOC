@@ -7,43 +7,17 @@ using System.Threading.Tasks;
 
 namespace Aetrex.IPC.cs
 {
-    internal class VoiceServiceToScanner
+    internal class VoiceServiceToScanner: IPCBase
     {
-        private string pipeName;
-        private string command;
-
-        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        CancellationToken cancellationToken;
-
+        
         AutoResetEvent commandReadyToTransmit = new AutoResetEvent(false);
 
-        public VoiceServiceToScanner(string pipeName)
-        {            
-            this.pipeName = pipeName;
-            cancellationToken = cancellationTokenSource.Token;
-
-            CommunicationThread();
+        public VoiceServiceToScanner(string pipeName): base(pipeName)
+        {                        
+            
         }
 
-        public void Close()
-        {
-            cancellationTokenSource.Cancel();
-        }
-
-        //public void SetMicrophoneIndex(int micIndex)
-        //{
-        //    //std::string tmp = "{\"time\": \"" + dateTime + "\", \"instruction\" : \"" + instruction + "\", \"microphoneIndex\" : " + std::to_string(microphoneIndex) + "}";
-        //    var commandObj = new
-        //    {
-        //        time = DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture), //Time in ISO 8601
-        //        instruction = "SetAudioCaptureDeviceIndex",
-        //        microphoneIndex = micIndex
-        //    };
-
-        //    command = JsonConvert.SerializeObject(commandObj);
-        //    commandReadyToTransmit.Set();
-        //}
-        private void CommunicationThread()
+        protected override void CommunicationThread()
         {
             NamedPipeServerStream pipeServer = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
 
@@ -91,9 +65,9 @@ namespace Aetrex.IPC.cs
                     Thread.Sleep(10000);
                 }
 
-                Console.WriteLine("Server closing");
+                Console.WriteLine("VoiceServiceToScanner closing the pipe");
                 pipeServer.Close();
-                Console.WriteLine("Server closed");
+                Console.WriteLine("VoiceServiceToScanner pipe is closed");
 
             }, cancellationToken);
         }

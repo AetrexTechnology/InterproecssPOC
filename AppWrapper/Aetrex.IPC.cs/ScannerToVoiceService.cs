@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
@@ -9,30 +10,66 @@ using System.Threading.Tasks;
 
 namespace Aetrex.IPC.cs
 {
-    internal class ScannerToVoiceProcess
+    internal class ScannerToVoiceService : IPCBase
     {
-        private CancellationTokenSource tokenSource;
         private NamedPipeClientStream pipeClient;
-        private CancellationToken token;
+        
+        AutoResetEvent commandReadyToTransmit = new AutoResetEvent(false);
+        string command;
 
-        public ScannerToVoiceProcess(string pipeName)
+        public ScannerToVoiceService(string pipeName): base(pipeName)
         {
-            tokenSource = new CancellationTokenSource();
-            token = tokenSource.Token;
+        }
 
+        public void SetMicrophoneIndex(int micIndex)
+        {
+            //std::string tmp = "{\"time\": \"" + dateTime + "\", \"instruction\" : \"" + instruction + "\", \"microphoneIndex\" : " + std::to_string(microphoneIndex) + "}";
+            var commandObj = new
+            {
+                time = DateTime.UtcNow.ToString("s", System.Globalization.CultureInfo.InvariantCulture), //Time in ISO 8601
+                instruction = "SetAudioCaptureDeviceIndex",
+                microphoneIndex = micIndex
+            };
+
+            command = JsonConvert.SerializeObject(commandObj);
+            commandReadyToTransmit.Set();
+        }
+
+        protected override void CommunicationThread()
+        {
             pipeClient = new NamedPipeClientStream(
                 ".",
                 pipeName,
-                PipeDirection.In, 
+                PipeDirection.In,
                 PipeOptions.Asynchronous,
                 TokenImpersonationLevel.Impersonation);
-        }
 
-        public void ConnectToService()
-        {            
-            Console.WriteLine($"Connecting to service. threadId:{Task.CurrentId.ToString()}");
-            pipeClient.Connect();
-            Console.WriteLine("Connected to service...\n");
+            StreamString ss = new StreamString(pipeClient);
+
+            Task.Run(async () =>
+            {
+                Console.WriteLine($"ScannerToVoiceService Connecting to service as a pipe client. threadId:{Task.CurrentId.ToString()}");
+                pipeClient.Connect();
+                Console.WriteLine("ScannerToVoiceService Connected to service...\n");
+
+
+                // polling boolean property
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    commandReadyToTransmit.WaitOne();
+
+                    //Responds to the service                    
+                    Console.WriteLine("Posting a message to server");
+                    await ss.WriteStringFixedAsync(command, cancellationToken);                    
+                    Console.WriteLine("Message to server posted");
+
+                    // Give the client process some time to display results before exiting.
+                    //Thread.Sleep(2000);
+                }
+
+                pipeClient.Close();
+
+            }, cancellationToken);
 
             // Task server = FetchMessageFromServer();
 
@@ -96,7 +133,7 @@ namespace Aetrex.IPC.cs
             }, token);            
         }
         */
-        
+        /*
         private Task PostMessageToService()
         {
             StreamString ss = new StreamString(pipeClient);
@@ -106,7 +143,7 @@ namespace Aetrex.IPC.cs
             {
                 int iMessageIndex = 1;
                 // polling boolean property
-                while (!token.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested)
                 {
                     //Responds to the service                    
                     Console.WriteLine("Posting a message to server");
@@ -118,14 +155,8 @@ namespace Aetrex.IPC.cs
                     int randomWait = random.Next(1, 4) * 1000;
                     Thread.Sleep(2000);
                 }
-            }, token);
+            }, cancellationToken);
         }
-        
-
-        public void Close()
-        {
-            tokenSource.Cancel();
-            pipeClient.Close();
-        }
+        */        
     }    
 }

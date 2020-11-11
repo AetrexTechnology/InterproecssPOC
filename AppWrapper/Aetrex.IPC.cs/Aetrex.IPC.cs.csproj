@@ -68,7 +68,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScannerToVoiceProcess.cs" />
+    <Compile Include="IPCBase.cs" />
+    <Compile Include="ScannerToVoiceService.cs" />
     <Compile Include="VoiceServiceToScanner.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="Program.cs" />

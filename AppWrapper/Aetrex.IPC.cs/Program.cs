@@ -26,11 +26,10 @@ namespace Aetrex.IPC.cs
             VoiceServiceToScanner voiceToScanner = new VoiceServiceToScanner(pipeNameVoiceToScanner);
 
             //Scanner to VAClient communicates over a pipe where C# is the pipe client and VAClient is the pipe service
-            ScannerToVoiceProcess scannerToVoice = null;
+            ScannerToVoiceService scannerToVoice = null;
             const string pipeNameScannerToVoice = "eNovaClient";
-            //scannerToVoice = new ScannerToVoiceProcess(pipeNameScannerToVoice);
-            //scannerToVoice.ConnectToService();
-            //scannerToVoice.SetMicrophoneIndex(0);
+            scannerToVoice = new ScannerToVoiceService(pipeNameScannerToVoice);            
+            scannerToVoice.SetMicrophoneIndex(0);
 
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();

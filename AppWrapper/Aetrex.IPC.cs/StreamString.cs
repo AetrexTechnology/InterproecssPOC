@@ -77,11 +77,11 @@ namespace Aetrex.IPC.cs
             return outBuffer.Length;
         }
 
-        public async Task<int> WriteStringFixedAsync(string outString)
+        public async Task<int> WriteStringFixedAsync(string outString, CancellationToken cancellationToken)
         {
             byte[] outBuffer = streamEncoding.GetBytes(outString + '\0');
             int len = Math.Min(outBuffer.Length, UInt16.MaxValue);
-            await ioStream.WriteAsync(outBuffer, 0, len);
+            await ioStream.WriteAsync(outBuffer, 0, len, cancellationToken);
             ioStream.Flush();
 
             return outBuffer.Length;
