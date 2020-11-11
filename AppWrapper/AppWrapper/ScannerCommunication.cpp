@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ScannerCommunication.h"
+#include <iomanip>
 
 
 static const std::string scannerPipeName("\\\\.\\pipe\\AetrexScannerOS2VoiceActivation");
@@ -18,11 +19,16 @@ void ScannerCommunication::SetChangeMicrophoneCallback(std::function<void(int)> 
     mChangeMicrophoneCallback = changeMicrophoneCallback;
 }
 
+std::string ScannerCommunication::GetMandatoryJsonPath(const std::string& messageType) {
+    std::string dateTime = Utils::getISO8601();
+    return "{\"time\": \"" + dateTime + "\", \"message_type\": \"" + messageType + "\"";
+}
+
 bool ScannerCommunication::Command(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId) {
     if (mCommunicator) {
         try {
-            std::string dateTime = Utils::getISO8601();
-            std::string tmp = "{\"time\": \"" + dateTime + "\", \"state\": \"" + state + "\", \"command\": \"" + command + "\", \"stt_utterance\": \"" + sttUtterance + "\", \"answer_text\": \"" + answer + "\", \"intent_id\": \"" + intentId + "\", \"answer_id\": \"" + answerId + "\"}";
+            std::string mandatoryJsonPath = GetMandatoryJsonPath("Command");
+            std::string tmp = mandatoryJsonPath + ", \"state\": \"" + state + "\", \"command\": \"" + command + "\", \"stt_utterance\": \"" + sttUtterance + "\", \"answer_text\": \"" + answer + "\", \"intent_id\": \"" + intentId + "\", \"answer_id\": \"" + answerId + "\"}";
             mCommunicator->sendData(tmp.c_str(), false);
         } catch (std::runtime_error& e) {
             std::cout << "Error during sending request from ScannerCommunication: " << e.what() << std::endl;
@@ -35,7 +41,42 @@ bool ScannerCommunication::Command(const char* state, const char* command, const
 }
 
 bool ScannerCommunication::State(const char* state) {
-    return Command(state, "", "", "", "", "");
+    if (mCommunicator) {
+        try {
+            std::string mandatoryJsonPath = GetMandatoryJsonPath("State");
+            std::string tmp = mandatoryJsonPath + ", \"state\": \"" + state + "\"}";
+            mCommunicator->sendData(tmp.c_str(), false);
+        }
+        catch (std::runtime_error& e) {
+            std::cout << "Error during sending request from ScannerCommunication: " << e.what() << std::endl;
+            return false;
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool ScannerCommunication::KeywordDetected(const char* wakePhrase, float confidence) {
+    if (mCommunicator) {
+        try {
+            std::string mandatoryJsonPath = GetMandatoryJsonPath("KeywordDetected");
+            std::stringstream confidenceStream;
+            confidenceStream << std::fixed << std::setprecision(2) << confidence;
+            std::string confidenceStr = confidenceStream.str();
+            std::string tmp = mandatoryJsonPath + ", \"wake_phrase\": \"" + wakePhrase + "\", \"confidence\": " + confidenceStr + "}";
+            mCommunicator->sendData(tmp.c_str(), false);
+        }
+        catch (std::runtime_error& e) {
+            std::cout << "Error during sending KeywordDetected message from ScannerCommunication: " << e.what() << std::endl;
+            return false;
+        }
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 std::string ScannerCommunication::IncomingMessageCallback(const char* requestMessage) {

@@ -7,14 +7,17 @@
 #define VACLIENTLIB_API __declspec(dllimport)
 #endif
 
+extern "C" {
+    VACLIENTLIB_API bool start();
+    VACLIENTLIB_API bool stop();
+    VACLIENTLIB_API bool SetSendCommandCallback(std::function<bool(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId)> sendCommandCallback);
+    VACLIENTLIB_API bool SetSendStateCallback(std::function<bool(const char* state)> sendStateCallback);
+    VACLIENTLIB_API bool SetSendKeywordDetectedCallback(std::function<bool(const char* wakePhrase, float confidence)> sendKeywordDetectedCallback);
 
-extern "C" VACLIENTLIB_API bool start();
-extern "C" VACLIENTLIB_API bool stop();
-extern "C" VACLIENTLIB_API bool SetSendCommandCallback(std::function<bool(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId)> sendCommandCallback);
-extern "C" VACLIENTLIB_API bool SetSendStateCallback(std::function<bool(const char* state)> sendStateCallback);
+    VACLIENTLIB_API bool GetState();
+    VACLIENTLIB_API bool ChangeMicrophone(int microphoneIndex);
 
-extern "C" VACLIENTLIB_API bool GetState();
-extern "C" VACLIENTLIB_API bool ChangeMicrophone(int microphoneIndex);
-
-//This is a test function. Remove it later.
-extern "C" VACLIENTLIB_API bool TestSendCommand();
+    //These are test functions. Remove them later.
+    VACLIENTLIB_API bool TestSendCommand();
+    VACLIENTLIB_API bool TestSendKeywordDetected(const char* wakePhrase, float confidence);
+}
