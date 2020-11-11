@@ -1,4 +1,7 @@
 #include "vasim.h"
+#include <ctime>
+
+#define _CRT_SECURE_NO_WARNINGS 
 
 int vasim::Init()
 {
@@ -33,7 +36,7 @@ int vasim::Init()
     printf("Waiting for a client\n");
 
     int iCommand = 0;
-    int maxCommands = 3;
+    int maxCommands = 1;
 
     while (1)
     {
@@ -100,13 +103,13 @@ int vasim::Init()
 
                 PostMessageToClient((LPOVERLAPPED)lpPipeInst, pszDest);
                 
-                iCommand++;
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+                iCommand++;                
             }
             
             FetchMessageFromClient((LPOVERLAPPED)lpPipeInst);
             
+            std::this_thread::sleep_for(std::chrono::milliseconds(4000));
+
             break;
 
             // The wait is satisfied by a completed read or write 
@@ -129,7 +132,10 @@ int vasim::Init()
 
 VOID vasim::PostMessageToClient(LPOVERLAPPED lpOverLap, STRSAFE_LPCWSTR message)
 {
-    printf("PostMessageToClient() begin\n");
+    auto end = std::chrono::system_clock::now();
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    printf("%s PostMessageToClient() begin\n", std::ctime(&end_time));
+
     LPPIPEINST lpPipeInst;
     BOOL fWrite = FALSE;
 
@@ -170,6 +176,8 @@ VOID WINAPI vasim::CompletedWriteRoutine(DWORD dwErr, DWORD cbWritten, LPOVERLAP
 
 VOID vasim::FetchMessageFromClient(LPOVERLAPPED lpOverLap)
 {
+    printf("Fetching message from client\n");
+
     LPPIPEINST lpPipeInst;
     BOOL fRead = FALSE;
 
@@ -201,6 +209,9 @@ VOID WINAPI vasim::CompletedReadRoutine(DWORD dwErr, DWORD cbBytesRead, LPOVERLA
     // lpOverlap points to storage for this instance. 
     lpPipeInst = (LPPIPEINST)lpOverLap;
     
+    auto end = std::chrono::system_clock::now();
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+    printf("%s ", std::ctime(&end_time));
     wprintf(L"%s\n",lpPipeInst->chRequest);
 }
 

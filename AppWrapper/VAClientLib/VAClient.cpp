@@ -155,7 +155,7 @@ void VAClient::SendStateToScanner() {
         auto state = getValueFromMap(mStates, i);
         if (state != "") {
             mCurrentState = state;
-            bool result = mSendCommandCallback(state.c_str(), command.c_str(), "bla-bla???", "bla-bla-bla!!!", "INTENT_1", "ANSWER_1_3");
+            bool result = mSendCommandCallback(state.c_str(), command.c_str(), "Question", "Answer", "INTENT_1", "ANSWER_1_3");
             std::cout << "Command: " << command << " is sent to the client with state: " << state << ", result: " << result << std::endl;
         } else {
             std::cout << "Unknown state: " << line << std::endl;

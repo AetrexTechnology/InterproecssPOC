@@ -9,44 +9,34 @@ using System.Threading.Tasks;
 
 namespace Aetrex.IPC.cs
 {
-    internal class IPCClient
+    internal class ScannerToVoiceService
     {
-        private Process IPCServerProcess = null;
         private CancellationTokenSource tokenSource;
         private NamedPipeClientStream pipeClient;
         private CancellationToken token;
 
-        public IPCClient()
+        public ScannerToVoiceService(string pipeName)
         {
             tokenSource = new CancellationTokenSource();
             token = tokenSource.Token;
 
-            //Create a Windows job object, register this process to the job so on job termination, this process and its child processes will terminate by Windows OS
-            JobManagement.Job job = new JobManagement.Job();
-            job.AddProcess(Process.GetCurrentProcess().Id);
-
-            const string IPCServer = "Aetrex.IPCCPP.Server.exe";
-            IPCServerProcess = new Process();
-            IPCServerProcess.StartInfo.FileName = IPCServer;
-            IPCServerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
-            IPCServerProcess.Start();
-
-            pipeClient =
-                new NamedPipeClientStream(".", "testpipe",
-                    PipeDirection.InOut, PipeOptions.None,
-                    TokenImpersonationLevel.Impersonation);
-
+            pipeClient = new NamedPipeClientStream(
+                ".",
+                pipeName,
+                PipeDirection.In, 
+                PipeOptions.Asynchronous,
+                TokenImpersonationLevel.Impersonation);
         }
 
-        public void CommunicateWithService()
-        {
-            Console.WriteLine("Connecting to server...\n");
+        public void ConnectToService()
+        {            
+            Console.WriteLine($"Connecting to service. threadId:{Task.CurrentId.ToString()}");
             pipeClient.Connect();
-            Console.WriteLine("Connected to server...\n");
+            Console.WriteLine("Connected to service...\n");
 
             Task server = FetchMessageFromServer();
 
-            Task client = PostMessageToService();
+            // Task client = PostMessageToService();
 
             //Task.Run(() =>
             //{
@@ -91,20 +81,23 @@ namespace Aetrex.IPC.cs
 
             return Task.Run(async () =>
             {
+                Console.WriteLine($"VoiceProcessToScanner.FetchMessageFromServer() threadId:{Task.CurrentId.ToString()}");
                 // polling boolean property
                 while (!token.IsCancellationRequested)
                 {
-                    Console.WriteLine("Fetching a message from server");
+                    Console.WriteLine("Fetching a message from voice service");
                     //Wait for a message from the service
-                    Console.WriteLine(await ss.ReadStringAsync(64));
-                    Console.WriteLine("Message from server arrived");
+                    Console.WriteLine(await ss.ReadStringAsync(1000));
+                    Console.WriteLine("Message from voice service arrived");
+
+                    Thread.Sleep(4000);
                 }
-                // Give the client process some time to display results before exiting.
-                Thread.Sleep(4000);
-
+                Console.WriteLine("FetchMessageFromServer exiting");
             }, token);
-        }
 
+            
+        }
+        /*
         private Task PostMessageToService()
         {
             StreamString ss = new StreamString(pipeClient);
@@ -128,6 +121,8 @@ namespace Aetrex.IPC.cs
                 }
             }, token);
         }
+        */
+
         public void Close()
         {
             tokenSource.Cancel();
