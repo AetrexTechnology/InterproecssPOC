@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace Aetrex.IPC.cs
 {
-    internal class ScannerToVoiceService
+    internal class ScannerToVoiceProcess
     {
         private CancellationTokenSource tokenSource;
         private NamedPipeClientStream pipeClient;
         private CancellationToken token;
 
-        public ScannerToVoiceService(string pipeName)
+        public ScannerToVoiceProcess(string pipeName)
         {
             tokenSource = new CancellationTokenSource();
             token = tokenSource.Token;
@@ -34,7 +34,7 @@ namespace Aetrex.IPC.cs
             pipeClient.Connect();
             Console.WriteLine("Connected to service...\n");
 
-            Task server = FetchMessageFromServer();
+            // Task server = FetchMessageFromServer();
 
             // Task client = PostMessageToService();
 
@@ -74,7 +74,7 @@ namespace Aetrex.IPC.cs
             }, token);
             */
         }
-
+        /*
         private Task FetchMessageFromServer()
         {
             StreamString ss = new StreamString(pipeClient);
@@ -93,11 +93,10 @@ namespace Aetrex.IPC.cs
                     Thread.Sleep(4000);
                 }
                 Console.WriteLine("FetchMessageFromServer exiting");
-            }, token);
-
-            
+            }, token);            
         }
-        /*
+        */
+        
         private Task PostMessageToService()
         {
             StreamString ss = new StreamString(pipeClient);
@@ -121,11 +120,12 @@ namespace Aetrex.IPC.cs
                 }
             }, token);
         }
-        */
+        
 
         public void Close()
         {
             tokenSource.Cancel();
+            pipeClient.Close();
         }
     }    
 }

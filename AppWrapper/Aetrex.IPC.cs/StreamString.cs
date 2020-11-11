@@ -41,10 +41,10 @@ namespace Aetrex.IPC.cs
             return serverMessage;
         }
 
-        public async Task<string> ReadStringAsync(int len)
+        public async Task<string> ReadStringAsync(int len, CancellationToken cancellationToken)
         {
             var inBuffer = new byte[len];
-            await ioStream.ReadAsync(inBuffer, 0, len);
+            await ioStream.ReadAsync(inBuffer, 0, len, cancellationToken);
 
             string serverMessage = streamEncoding.GetString(inBuffer).Trim('\0');
             //Console.WriteLine($"Server message: {serverMessage}");
