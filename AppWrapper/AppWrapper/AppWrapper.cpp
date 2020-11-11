@@ -16,6 +16,7 @@ private:
 
     bool SendCommandCallbck(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId);
     bool SendStateCallbck(const char* state);
+    bool SendKeywordDetectedCallbck(const char* wakePhrase, float confidence);
 
 private:
     std::unique_ptr<ScannerCommunication> mScannerCommunication;
@@ -32,8 +33,10 @@ AppWrapperSample::AppWrapperSample() {
     std::function<bool(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId)> sendCommandCallbck =
         std::bind(&AppWrapperSample::SendCommandCallbck, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
     std::function<bool(const char* state)> sendStateCallbck = std::bind(&AppWrapperSample::SendStateCallbck, this, std::placeholders::_1);
+    std::function<bool(const char* wakePhrase, float confidence)> sendKeywordDetectedCallbck = std::bind(&AppWrapperSample::SendKeywordDetectedCallbck, this, std::placeholders::_1, std::placeholders::_2);
     SetSendCommandCallback(sendCommandCallbck);
     SetSendStateCallback(sendStateCallbck);
+    SetSendKeywordDetectedCallback(sendKeywordDetectedCallbck);
 }
 
 void AppWrapperSample::getStateCallback() {
@@ -49,6 +52,10 @@ bool AppWrapperSample::SendCommandCallbck(const char* state, const char* command
 }
 bool AppWrapperSample::SendStateCallbck(const char* state) {
     return mScannerCommunication->State(state);
+}
+
+bool AppWrapperSample::SendKeywordDetectedCallbck(const char* wakePhrase, float confidence) {
+    return mScannerCommunication->KeywordDetected(wakePhrase, confidence);
 }
 
 TCHAR AppWrapperSample::getch() {
@@ -70,13 +77,15 @@ TCHAR AppWrapperSample::getch() {
 void AppWrapperSample::launch() {
     std::cout << "Please select action." << std::endl;
     std::cout << "'s' - send Command to Scanner." << std::endl;
+    std::cout << "'k' - send KeywordDetected to Scanner." << std::endl;
     std::cout << "'q' - exit." << std::endl;
 
     for (TCHAR c; c = getch();) {
         if (c == 's') {
             TestSendCommand();
-        }
-        else if (c == 'q') {
+        } else if (c == 'k') {
+            TestSendKeywordDetected("Hi Albert", 0.99);
+        } else if (c == 'q') {
             break;
         }
         else {

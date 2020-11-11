@@ -20,9 +20,11 @@ public:
 
     bool Command(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId);
     bool State(const char* state);
+    bool KeywordDetected(const char* wakePhrase, float confidence);
 
 private:
     std::string IncomingMessageCallback(const char* requestMessage);
+    std::string GetMandatoryJsonPath(const std::string& messageType);
 
 private:
     std::unique_ptr<TwoWayCommunicator> mCommunicator;

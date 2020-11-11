@@ -69,6 +69,14 @@ bool SetSendStateCallback(std::function<bool(const char* state)> sendStateCallba
     return false;
 }
 
+bool SetSendKeywordDetectedCallback(std::function<bool(const char* wakePhrase, float confidence)> sendKeywordDetectedCallback) {
+    if (pVAClient) {
+        pVAClient->SetSendKeywordDetectedCallback(sendKeywordDetectedCallback);
+        return true;
+    }
+    return false;
+}
+
 bool GetState() {
     if (pVAClient) {
         return pVAClient->GetState();
@@ -86,6 +94,14 @@ bool ChangeMicrophone(int microphoneIndex) {
 bool TestSendCommand() {
     if (pVAClient) {
         pVAClient->SendStateToScanner();
+        return true;
+    }
+    return false;
+}
+
+bool TestSendKeywordDetected(const char* wakePhrase, float confidence) {
+    if (pVAClient) {
+        pVAClient->SendKeywordDetected(wakePhrase, confidence);
         return true;
     }
     return false;
@@ -117,6 +133,10 @@ void VAClient::SetSendCommandCallback(std::function<bool(const char* state, cons
 
 void VAClient::SetSendStateCallback(std::function<bool(const char* state)> sendStateCallback) {
     mSendStateCallback = sendStateCallback;
+}
+
+void VAClient::SetSendKeywordDetectedCallback(std::function<bool(const char* wakePhrase, float confidence)> sendKeywordDetectedCallback) {
+    mSendKeywordDetectedCallback = sendKeywordDetectedCallback;
 }
 
 bool VAClient::GetState() {
@@ -163,6 +183,10 @@ void VAClient::SendStateToScanner() {
     } else {
         std::cout << "Unknown command: " << line << std::endl;
     }
+}
+
+void VAClient::SendKeywordDetected(const char* wakePhrase, float confidence) {
+    mSendKeywordDetectedCallback(wakePhrase, confidence);
 }
 
 void VAClient::listMap(const std::map<int, std::string>& map) {
