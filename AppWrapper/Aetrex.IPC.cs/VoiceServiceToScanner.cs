@@ -19,7 +19,12 @@ namespace Aetrex.IPC.cs
 
         protected override void CommunicationThread()
         {
-            NamedPipeServerStream pipeServer = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            NamedPipeServerStream pipeServer = new NamedPipeServerStream(
+                this.pipeName, 
+                PipeDirection.InOut, 
+                1, 
+                PipeTransmissionMode.Message, 
+                PipeOptions.Asynchronous);
 
             Task.Run(async () => {
 

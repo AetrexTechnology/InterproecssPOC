@@ -40,7 +40,7 @@ namespace Aetrex.IPC.cs
             pipeClient = new NamedPipeClientStream(
                 ".",
                 pipeName,
-                PipeDirection.In,
+                PipeDirection.InOut,
                 PipeOptions.Asynchronous,
                 TokenImpersonationLevel.Impersonation);
 
@@ -59,7 +59,7 @@ namespace Aetrex.IPC.cs
                     commandReadyToTransmit.WaitOne();
 
                     //Responds to the service                    
-                    Console.WriteLine("Posting a message to server");
+                    Console.WriteLine("\nPosting a message to server");
                     await ss.WriteStringFixedAsync(command, cancellationToken);                    
                     Console.WriteLine("Message to server posted");
 

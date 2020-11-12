@@ -29,10 +29,25 @@ namespace Aetrex.IPC.cs
             ScannerToVoiceService scannerToVoice = null;
             const string pipeNameScannerToVoice = "eNovaClient";
             scannerToVoice = new ScannerToVoiceService(pipeNameScannerToVoice);            
-            scannerToVoice.SetMicrophoneIndex(0);
 
-            Console.WriteLine("Press any key to exit");
-            Console.ReadKey();
+            Console.WriteLine("Press 1 to send a message to the voice service");
+            Console.WriteLine("Press Enter to exit");
+            var keyPressed = Console.ReadKey();
+            do
+            {                
+                if (keyPressed.Key == ConsoleKey.D1)
+                {
+                    if (scannerToVoice != null)
+                    {
+                        scannerToVoice.SetMicrophoneIndex(0);
+                    }
+                }
+                if (keyPressed.Key != ConsoleKey.Enter)
+                {
+                    keyPressed = Console.ReadKey();
+                }
+            }
+            while (keyPressed.Key != ConsoleKey.Enter);
             
             if (voiceToScanner != null)
             {
@@ -44,7 +59,7 @@ namespace Aetrex.IPC.cs
             {
                 Console.WriteLine("Closing the connection from the scanner to the voice process");
                 scannerToVoice.Close();
-            }
+            }            
         }
 
     }
