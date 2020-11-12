@@ -28,26 +28,39 @@ std::string ScannerCommunication::GetMandatoryJsonPath(const std::string& messag
 
 bool ScannerCommunication::Command(const char* state, const char* command, const char* sttUtterance, const char* answer, const char* intentId, const char* answerId) {
     if (mCommunicator) {
-        try {
-            std::string mandatoryJsonPath = GetMandatoryJsonPath("Command");
-            std::string tmp = mandatoryJsonPath + ", \"state\": \"" + state + "\", \"command\": \"" + command + "\", \"stt_utterance\": \"" + sttUtterance + "\", \"answer_text\": \"" + answer + "\", \"intent_id\": \"" + intentId + "\", \"answer_id\": \"" + answerId + "\"}";
-            mCommunicator->sendData(tmp.c_str(), false);
-        } catch (std::runtime_error& e) {
+        try 
+        {
+            json jCommand = {
+                {"time", Utils::getISO8601()},
+                {"message_type", command},
+                {"stt_utterance", sttUtterance},
+                {"answer_text", answer},
+                {"intent_id", intentId},
+                {"answer_id", answerId}
+            };
+            mCommunicator->sendData(jCommand.dump().c_str(), false);
+        }
+        catch (std::runtime_error& e) {
             std::cout << "Error during sending request from ScannerCommunication: " << e.what() << std::endl;
             return false;
         }
         return true;
-    } else {
+    }
+    else {
         return false;
     }
 }
 
 bool ScannerCommunication::State(const char* state) {
     if (mCommunicator) {
-        try {
-            std::string mandatoryJsonPath = GetMandatoryJsonPath("State");
-            std::string tmp = mandatoryJsonPath + ", \"state\": \"" + state + "\"}";
-            mCommunicator->sendData(tmp.c_str(), false);
+        try 
+        {
+            json jCommand = {
+                {"time", Utils::getISO8601()},
+                {"message_type", "State"},
+                {"state", state}
+            };
+            mCommunicator->sendData(jCommand.dump().c_str(), false);
         }
         catch (std::runtime_error& e) {
             std::cout << "Error during sending request from ScannerCommunication: " << e.what() << std::endl;
