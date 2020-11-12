@@ -47,20 +47,18 @@ namespace Aetrex.IPC.cs
 
             Task.Run(async () =>
             {
-                Console.WriteLine($"ScannerToVoiceService Connecting to service as a pipe client. threadId:{Task.CurrentId.ToString()}");
+                Console.WriteLine($"ScannerToVoiceService Connecting to voice service as a pipe client.");
                 pipeClient.Connect();
-                Console.WriteLine("ScannerToVoiceService Connected to service...\n");
-
-
-                // polling boolean property
+                Console.WriteLine("ScannerToVoiceService Connected to voice service...\n");
+                
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     commandReadyToTransmit.WaitOne();
 
                     //Responds to the service                    
-                    Console.WriteLine("\nPosting a message to server");
+                    Console.WriteLine("\nPosting a message to voice service");
                     await ss.WriteStringFixedAsync(command, cancellationToken);                    
-                    Console.WriteLine("Message to server posted");
+                    Console.WriteLine("Message to voice service posted");
                 }
 
                 pipeClient.Close();

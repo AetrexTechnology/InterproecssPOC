@@ -35,6 +35,9 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
         if (mHPipe != INVALID_HANDLE_VALUE)
             break;
 
+        DWORD gle = GetLastError();
+        std::cout << "AppWrapper NamedPipeClient::sendRequest CreateFile last error" << gle << std::endl;
+
         // Exit if an error other than ERROR_PIPE_BUSY occurs. 
         if (GetLastError() != ERROR_PIPE_BUSY) {
             std::cout << "NamedPipeClient::sendRequest, Could not open pipe, GLE=" << GetLastError() << std::endl;
@@ -105,6 +108,8 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
     }
 
     CloseHandle(mHPipe);
+
+    std::cout << "NamedPipeClient::sendRequest closed the pipe to the scanner" << std::endl;
 
     return response;
 }
