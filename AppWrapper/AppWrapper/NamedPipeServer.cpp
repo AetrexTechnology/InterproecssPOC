@@ -53,6 +53,7 @@ int NamedPipeServer::Listen() {
     // next client connect request. It is an infinite loop.
     while (mIsRun) {
         OutputDebugString(L"Pipe Server: Main thread awaiting client connection\n");
+        std::cout << "Pipe Server: Main thread awaiting client connection" << std::endl;
         mHPipe = CreateNamedPipe(
             lpszPipename,             // pipe name
             PIPE_ACCESS_DUPLEX,       // read/write access
@@ -77,6 +78,7 @@ int NamedPipeServer::Listen() {
 
         if (fConnected) {
             OutputDebugString(L"Client connected, creating a processing thread.\n");
+            std::cout << "Client connected" << std::endl;
             Read();
         } else {
             // The client could not connect, so close the pipe.
@@ -131,6 +133,8 @@ DWORD WINAPI NamedPipeServer::Read() {
     while (mIsRun) {
         //Read client requests from the pipe. This simplistic code only allows messages
         //up to BUFSIZE characters in length.
+        std::cout << "NamedPipeServer::Read, about to read from pipe." << std::endl;
+
         fSuccess = ReadFile(
             mHPipe,        // handle to pipe
             pchRequest,    // buffer to receive data
@@ -146,6 +150,8 @@ DWORD WINAPI NamedPipeServer::Read() {
             }
             break;
         }
+
+        std::cout << "NamedPipeServer::Read, read from pipe complete." << std::endl;
 
         //Process the incoming message.
         std::string request = Utils::wstringToString(pchRequest);

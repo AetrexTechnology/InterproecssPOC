@@ -156,6 +156,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="json.hpp" />
     <ClInclude Include="NamedPipeClient.h" />
     <ClInclude Include="NamedPipeServer.h" />
     <ClInclude Include="ScannerCommunication.h" />

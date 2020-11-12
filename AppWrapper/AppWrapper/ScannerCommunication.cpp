@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "ScannerCommunication.h"
 #include <iomanip>
+#include "json.hpp"
 
+using json = nlohmann::json;
 
 static const std::string scannerPipeName("\\\\.\\pipe\\AetrexScannerOS2VoiceActivation");
 static const std::string eNovaPipeName("\\\\.\\pipe\\eNovaClient");
@@ -80,28 +82,38 @@ bool ScannerCommunication::KeywordDetected(const char* wakePhrase, float confide
 }
 
 std::string ScannerCommunication::IncomingMessageCallback(const char* requestMessage) {
-    if (strlen(requestMessage) > 57 && !strncmp(requestMessage + 49, "GetState", 8)) {
-        if (mGetStateCallback != nullptr) {
-            mGetStateCallback();
-        } else {
-            std::cout << "Error: GetStateCallback isn't set." << std::endl;
-        }
-    } else if (strlen(requestMessage) > 75 && !strncmp(requestMessage + 49, "SetAudioCaptureDeviceIndex", 26)) {
-        int microphoneIndex = -1;
-        try {
-            if (strlen(requestMessage) > 98) {
-                char buf[8] = {0};
-                strncpy_s(buf, requestMessage + 98, 1);
-                microphoneIndex = std::stoi(buf);
+    try
+    {
+        auto request = json::parse(requestMessage);        
+        std::string instruction = request["instruction"];
+        std::cout << "ScannerCommunication::IncomingMessageCallback instruction=" << instruction << std::endl;
+        if (instruction.compare("SetAudioCaptureDeviceIndex") == 0)
+        {
+            int microphoneIndex = request["microphoneIndex"];
+            
+            if (mChangeMicrophoneCallback != nullptr) 
+            {
+                mChangeMicrophoneCallback(microphoneIndex);
             }
-        } catch (const std::exception&) {}
-        if (mChangeMicrophoneCallback != nullptr) {
-            mChangeMicrophoneCallback(microphoneIndex);
-        } else {
-            std::cout << "Error: ChangeMicrophoneCallback isn't set." << std::endl;
+            else 
+            {
+                std::cout << "Error: ChangeMicrophoneCallback isn't set." << std::endl;
+            }
         }
-    } else {
-        std::cout << "Unknown command received by ScannerCommunication." << std::endl;
+        
+        if (instruction.compare("GetState") == 0)
+        {
+            if (mGetStateCallback != nullptr) {
+                mGetStateCallback();
+            } else {
+                std::cout << "Error: GetStateCallback isn't set." << std::endl;
+            }
+        }
     }
+    catch (std::runtime_error& e) {
+        std::cout << "ScannerCommunication::IncomingMessageCallback failed to parse incoming request json: " << e.what() << std::endl;
+        return "";
+    }
+
     return "";
 }
