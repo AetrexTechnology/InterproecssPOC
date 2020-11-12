@@ -53,12 +53,7 @@ namespace Aetrex.IPC.cs
                         else
                         {
                             Console.WriteLine("VoiceServiceToScanner.CommunicationThread() No message from voice service");
-                        }
-                        
-
-                        //Console.WriteLine($"About to send a message to voice service");
-                        //await ss.WriteStringFixedAsync(command);
-                        //Console.WriteLine($"Sent message to voice service");
+                        }                        
                     }
                     // Catch the IOException that is raised if the pipe is broken
                     // or disconnected.
