@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "NamedPipeClient.h"
+#include "VoiceServiceToScanner.h"
 #include "Common.h"
 
 #include <tchar.h>
@@ -9,12 +9,12 @@
 #include <codecvt>
 
 
-NamedPipeClient::NamedPipeClient(const char* pipeName) {
+VoiceServiceToScanner::VoiceServiceToScanner(const char* pipeName) {
     mPipeName = Utils::stringToWstring(pipeName);
-    pLogger = Utils::initLogger("NamedPipeClient");
+    pLogger = Utils::initLogger("VoiceServiceToScanner");
 }
 
-std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitForResponse) {
+std::string VoiceServiceToScanner::sendRequest(const char *requestMessage, bool waitForResponse) {
     HANDLE mHPipe;
     TCHAR  chBuf[BUFSIZE];
     BOOL   fSuccess = FALSE;

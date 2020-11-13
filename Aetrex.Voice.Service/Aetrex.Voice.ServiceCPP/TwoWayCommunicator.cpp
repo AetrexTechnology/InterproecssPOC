@@ -1,11 +1,11 @@
 ﻿#include "pch.h"
 #include "TwoWayCommunicator.h"
-#include "NamedPipeClient.h"
+#include "VoiceServiceToScanner.h"
 
 
 TwoWayCommunicator::TwoWayCommunicator(const char* localPipeName, const char* remotePipeName, std::function<std::string(const char*)> callback) : mCallback(callback) {
     mScannerToVoiceService = std::make_unique<ScannerToVoiceService>(localPipeName, this);
-    mNamedPipeClient = std::make_unique<NamedPipeClient>(remotePipeName);
+    mVoiceServiceToScanner = std::make_unique<VoiceServiceToScanner>(remotePipeName);
     mScannerToVoiceService->Start();
 }
 
@@ -15,7 +15,7 @@ TwoWayCommunicator::~TwoWayCommunicator() {
 
 std::string TwoWayCommunicator::sendData(const char* data, bool waitForResponse) {
     std::cout << "Sending request to Client:" << data << std::endl;
-    return mNamedPipeClient->sendRequest(data, waitForResponse);
+    return mVoiceServiceToScanner->sendRequest(data, waitForResponse);
 }
 
 std::string TwoWayCommunicator::handleRequest(const char* requestMessage) {

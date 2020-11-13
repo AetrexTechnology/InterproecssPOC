@@ -151,7 +151,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Program.cpp" />
-    <ClCompile Include="NamedPipeClient.cpp" />
+    <ClCompile Include="VoiceServiceToScanner.cpp" />
     <ClCompile Include="ScannerToVoiceService.cpp" />
     <ClCompile Include="ScannerCommunication.cpp" />
     <ClCompile Include="TwoWayCommunicator.cpp" />
@@ -159,7 +159,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="json.hpp" />
-    <ClInclude Include="NamedPipeClient.h" />
+    <ClInclude Include="VoiceServiceToScanner.h" />
     <ClInclude Include="ScannerToVoiceService.h" />
     <ClInclude Include="ScannerCommunication.h" />
     <ClInclude Include="TwoWayCommunicator.h" />

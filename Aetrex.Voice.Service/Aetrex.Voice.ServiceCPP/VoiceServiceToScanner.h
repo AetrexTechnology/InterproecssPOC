@@ -4,9 +4,9 @@
 #include <windows.h>
 
 
-class NamedPipeClient final {
+class VoiceServiceToScanner final {
 public:
-    NamedPipeClient(const char* pipeName);
+    VoiceServiceToScanner(const char* pipeName);
     std::string sendRequest(const char* requestMessage, bool waitForResponse);
 private:
     std::wstring mPipeName;

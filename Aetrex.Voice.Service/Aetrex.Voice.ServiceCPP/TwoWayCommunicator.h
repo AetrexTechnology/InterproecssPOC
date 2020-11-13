@@ -6,7 +6,7 @@
 #include <functional>
 
 
-class NamedPipeClient;
+class VoiceServiceToScanner;
 
 
 class TwoWayCommunicator final : public ScannerToVoiceService::RequestHandlerInterface {
@@ -23,6 +23,6 @@ private:
 
 private:
     std::unique_ptr<ScannerToVoiceService> mScannerToVoiceService;
-    std::unique_ptr<NamedPipeClient> mNamedPipeClient;
+    std::unique_ptr<VoiceServiceToScanner> mVoiceServiceToScanner;
     std::function<std::string(const char *)> mCallback;
 };

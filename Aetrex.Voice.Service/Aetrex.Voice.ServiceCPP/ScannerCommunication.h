@@ -4,7 +4,7 @@
 #include "common.h"
 #include "TwoWayCommunicator.h"
 
-class NamedPipeClient;
+class VoiceServiceToScanner;
 
 class ScannerCommunication final {
 public:
