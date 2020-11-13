@@ -5,8 +5,8 @@
 
 using json = nlohmann::json;
 
-static const std::string scannerPipeName("\\\\.\\pipe\\AetrexScannerOS2VoiceActivation");
-static const std::string eNovaPipeName("\\\\.\\pipe\\eNovaClient");
+static const std::string scannerPipeName("\\\\.\\pipe\\AetrexVoiceServiceToScanner");
+static const std::string eNovaPipeName("\\\\.\\pipe\\AetrexScannerToVoiceService");
 
 ScannerCommunication::ScannerCommunication() {
     //pLogger = spdlog::rotating_logger_mt("ScannerCommunication", "logs/Aetrex.Voice.Service.log", 200000, 3);

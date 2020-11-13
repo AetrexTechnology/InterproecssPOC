@@ -22,12 +22,12 @@ namespace Aetrex.IPC.cs
             Console.WriteLine($"Program.Main() threadId:{Task.CurrentId.ToString()}");
 
             //VAClient to scanner communicates over a pipe where C# is the pipe server and VAClient is the pipe client
-            const string pipeNameVoiceToScanner = "AetrexScannerOS2VoiceActivation";
+            const string pipeNameVoiceToScanner = "AetrexVoiceServiceToScanner";
             VoiceServiceToScanner voiceToScanner = new VoiceServiceToScanner(pipeNameVoiceToScanner);
 
             //Scanner to VAClient communicates over a pipe where C# is the pipe client and VAClient is the pipe service
             ScannerToVoiceService scannerToVoice = null;
-            const string pipeNameScannerToVoice = "eNovaClient";
+            const string pipeNameScannerToVoice = "AetrexScannerToVoiceService";
             scannerToVoice = new ScannerToVoiceService(pipeNameScannerToVoice);            
 
             Console.WriteLine("Press 1 to send a message to the voice service");
