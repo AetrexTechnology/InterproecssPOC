@@ -3,7 +3,6 @@
 #include "ScannerCommunication.h"
 #include "VAClientLib.h"
 
-
 class AppWrapperSample {
 public:
     AppWrapperSample();
@@ -11,6 +10,7 @@ public:
     void launch();
     TCHAR getch();
 private:
+    void initLogging();
     void getStateCallback();
     void changeMicrophoneCallback(int microphoneIndex);
 
@@ -20,9 +20,15 @@ private:
 
 private:
     std::unique_ptr<ScannerCommunication> mScannerCommunication;
+    std::shared_ptr<spdlog::logger> pLogger;
 };
 
 AppWrapperSample::AppWrapperSample() {
+    initLogging();
+
+    pLogger = Utils::initLogger("Main");
+    pLogger->info("----------------------------- Start -----------------------");
+
     std::function<void(void)> getStateCallback = std::bind(&AppWrapperSample::getStateCallback, this);
     std::function<void(int)> changeMicrophoneCallback = std::bind(&AppWrapperSample::changeMicrophoneCallback, this, std::placeholders::_1);
     mScannerCommunication = std::make_unique<ScannerCommunication>();
@@ -58,6 +64,14 @@ bool AppWrapperSample::SendKeywordDetectedCallbck(const char* wakePhrase, float 
     return mScannerCommunication->KeywordDetected(wakePhrase, confidence);
 }
 
+void AppWrapperSample::initLogging()
+{
+    // periodically flush all *registered* loggers every 3 seconds:
+    // warning: only use if all your loggers are thread safe ("_mt" loggers)
+    spdlog::flush_every(std::chrono::seconds(3));
+    
+}
+
 TCHAR AppWrapperSample::getch() {
     DWORD mode, cc;
     HANDLE h = GetStdHandle(STD_INPUT_HANDLE);
@@ -84,7 +98,7 @@ void AppWrapperSample::launch() {
         if (c == 's') {
             TestSendCommand();
         } else if (c == 'k') {
-            TestSendKeywordDetected("Hi Albert", 0.99);
+            TestSendKeywordDetected("Hi Albert", 0.99f);
         } else if (c == 'q') {
             break;
         }

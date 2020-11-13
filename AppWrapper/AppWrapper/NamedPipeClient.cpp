@@ -11,6 +11,7 @@
 
 NamedPipeClient::NamedPipeClient(const char* pipeName) {
     mPipeName = Utils::stringToWstring(pipeName);
+    pLogger = Utils::initLogger("NamedPipeClient");
 }
 
 std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitForResponse) {
@@ -19,6 +20,9 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
     BOOL   fSuccess = FALSE;
     DWORD  cbRead, cbToWrite, cbWritten, dwMode;
     LPCTSTR lpszPipename = mPipeName.c_str();
+
+    pLogger->info(fmt::format("sendRequest() to pipe {}", Utils::wstringToString(mPipeName)));
+
     // Try to open a named pipe; wait for it, if necessary.
     while (true) {
         mHPipe = CreateFile(
@@ -35,20 +39,22 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
         if (mHPipe != INVALID_HANDLE_VALUE)
             break;
 
-        DWORD gle = GetLastError();
-        std::cout << "AppWrapper NamedPipeClient::sendRequest CreateFile last error" << gle << std::endl;
-
         // Exit if an error other than ERROR_PIPE_BUSY occurs. 
         if (GetLastError() != ERROR_PIPE_BUSY) {
-            std::cout << "NamedPipeClient::sendRequest, Could not open pipe, GLE=" << GetLastError() << std::endl;
-            std::string errorTxt = "NamedPipeClient::sendRequest, Can't open pipe, GLE=" + std::to_string(GetLastError());
-            throw std::runtime_error(errorTxt);
+            std::string errorMessage = fmt::format("sendRequest() could not open the pipe, error: {}", GetLastError());
+            std::cout << errorMessage << std::endl;
+            pLogger->error(errorMessage);
+
+            throw std::runtime_error(errorMessage);
         }
 
         // All pipe instances are busy, so wait for 20 seconds. 
         if (!WaitNamedPipe(lpszPipename, 2000)) {
-            std::cout << "Could not open pipe: 20 second wait timed out."  << std::endl;
-            throw std::runtime_error("Could not open pipe: 2 second wait timed out.");
+            std::string errorMessage = fmt::format("sendRequest() could not reopen the pipe after 2 seconds wait, error: {}", GetLastError());
+            std::cout << errorMessage << std::endl;
+            pLogger->error(errorMessage);
+
+            throw std::runtime_error(errorMessage);
         }
     }
 
@@ -61,9 +67,11 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
         NULL);    // don't set maximum time 
 
     if (!fSuccess) {
-        std::cout << "NamedPipeClient::sendRequest, SetNamedPipeHandleState failed, GLE=" << GetLastError() << std::endl;
-        std::string errorTxt = "NamedPipeClient::sendRequest, SetNamedPipeHandleState failed, GLE=" + std::to_string(GetLastError());
-        throw std::runtime_error(errorTxt);
+        std::string errorMessage = fmt::format("sendRequest() SetNamedPipeHandleState failed, error: {}", GetLastError());
+        std::cout << errorMessage << std::endl;
+        pLogger->error(errorMessage);
+
+        throw std::runtime_error(errorMessage);
     }
 
     // Send a message to the pipe server. 
@@ -78,9 +86,11 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
         NULL);                  // not overlapped 
 
     if (!fSuccess) {
-        std::cout << "NamedPipeClient::sendRequest, WriteFile to pipe failed, GLE=" << GetLastError() << std::endl;
-        std::string errorTxt = "NamedPipeClient::sendRequest, WriteFile to pipe failed, GLE=" + std::to_string(GetLastError());
-        throw std::runtime_error(errorTxt);
+        std::string errorMessage = fmt::format("sendRequest() WriteFile to pipe failed, error: {}", GetLastError());
+        std::cout << errorMessage << std::endl;
+        pLogger->error(errorMessage);
+
+        throw std::runtime_error(errorMessage);
     }
 
     std::string response = "";
@@ -100,16 +110,20 @@ std::string NamedPipeClient::sendRequest(const char *requestMessage, bool waitFo
         } while (!fSuccess);  // repeat loop if ERROR_MORE_DATA 
 
         if (!fSuccess) {
-            std::cout << "NamedPipeClient::sendRequest, ReadFile from pipe failed, GLE=" << GetLastError() << std::endl;
-            std::string errorTxt = "NamedPipeClient::sendRequest, ReadFile from pipe failed, GLE=" + std::to_string(GetLastError());
-            throw std::runtime_error(errorTxt);
+            std::string errorMessage = fmt::format("sendRequest() reading response from pipe failed, error: {}", GetLastError());
+            std::cout << errorMessage << std::endl;
+            pLogger->error(errorMessage);
+
+            throw std::runtime_error(errorMessage);
         }
         response = Utils::wstringToString(chBuf);
     }
 
     CloseHandle(mHPipe);
 
-    std::cout << "NamedPipeClient::sendRequest closed the pipe to the scanner" << std::endl;
+    std::string logMessage = fmt::format("sendRequest() closed the pipe {} to the scanner", Utils::wstringToString(mPipeName));
+    pLogger->info(logMessage);
+    std::cout << logMessage << std::endl;
 
     return response;
 }

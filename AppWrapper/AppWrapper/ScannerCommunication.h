@@ -1,13 +1,10 @@
 #pragma once
 
+#include <string>
 #include "common.h"
 #include "TwoWayCommunicator.h"
 
-#include <string>
-
-
 class NamedPipeClient;
-
 
 class ScannerCommunication final {
 public:
@@ -30,4 +27,5 @@ private:
     std::unique_ptr<TwoWayCommunicator> mCommunicator;
     std::function<void(void)> mGetStateCallback = nullptr;
     std::function<void(int)> mChangeMicrophoneCallback = nullptr;
+    std::shared_ptr<spdlog::logger> pLogger;
 };

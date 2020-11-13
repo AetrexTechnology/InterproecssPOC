@@ -10,6 +10,7 @@
 
 NamedPipeServer::NamedPipeServer(const char *pipeName, RequestHandlerInterface* requestHandler) : mRequestHandler(requestHandler) {
     mPipeName = Utils::stringToWstring(pipeName);
+    pLogger = Utils::initLogger("NamedPipeServer");
 }
 
 NamedPipeServer::~NamedPipeServer() {
@@ -46,6 +47,8 @@ int NamedPipeServer::Listen() {
     HANDLE hPipe = INVALID_HANDLE_VALUE, hThread = NULL;
     LPCTSTR lpszPipename = mPipeName.c_str();
 
+    pLogger->info(fmt::format("Listening to pipe {}", Utils::wstringToString(mPipeName)));
+
     // The main loop creates an instance of the named pipe and
     // then waits for a client to connect to it. When the client
     // connects, a thread is created to handle communications
@@ -67,7 +70,10 @@ int NamedPipeServer::Listen() {
             NULL);                    // default security attribute
 
         if (mHPipe == INVALID_HANDLE_VALUE) {
-            std::cout << "NamedPipeServer::Read, CreateNamedPipe failed, GLE=" << GetLastError() << std::endl;
+            std::string errorMessage = fmt::format("Listen() CreateNamedPipe failed, error: {}", GetLastError());
+            std::cout << errorMessage << std::endl;
+            pLogger->error(errorMessage);
+
             return -1;
         }
 
@@ -77,8 +83,11 @@ int NamedPipeServer::Listen() {
         fConnected = ConnectNamedPipe(mHPipe, NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
 
         if (fConnected) {
-            OutputDebugString(L"Client connected, creating a processing thread.\n");
             std::cout << "Client connected" << std::endl;
+            std::string logMessage = fmt::format("Client connected to pipe {}", Utils::wstringToString(mPipeName));
+            pLogger->info(logMessage);
+            std::cout << logMessage << std::endl;
+
             Read();
         } else {
             // The client could not connect, so close the pipe.
@@ -105,26 +114,20 @@ DWORD WINAPI NamedPipeServer::Read() {
     // Do some extra error checking since the app will keep running even if this
     // thread fails.
     if (mHPipe == NULL) {
-        OutputDebugString(L"\nERROR - Pipe Server Failure:\n");
-        OutputDebugString(L"   InstanceThread got an unexpected NULL value in mHPipe.\n");
-        OutputDebugString(L"   InstanceThread exitting.\n");
+        pLogger->error("Read() pipe is not available. Aborting.");
         if (pchReply != NULL) HeapFree(hHeap, 0, pchReply);
         if (pchRequest != NULL) HeapFree(hHeap, 0, pchRequest);
         return (DWORD)-1;
     }
 
     if (pchRequest == NULL) {
-        OutputDebugString(L"\nERROR - Pipe Server Failure:\n");
-        OutputDebugString(L"   InstanceThread got an unexpected NULL heap allocation.\n");
-        OutputDebugString(L"   InstanceThread exitting.\n");
+        pLogger->error("Read() failed to allocate request buffer. Aborting.");
         if (pchReply != NULL) HeapFree(hHeap, 0, pchReply);
         return (DWORD)-1;
     }
 
     if (pchReply == NULL) {
-        OutputDebugString(L"\nERROR - Pipe Server Failure:\n");
-        OutputDebugString(L"   InstanceThread got an unexpected NULL heap allocation.\n");
-        OutputDebugString(L"   InstanceThread exitting.\n");
+        pLogger->error("Read() failed to allocate response buffer. Aborting.");
         if (pchRequest != NULL) HeapFree(hHeap, 0, pchRequest);
         return (DWORD)-1;
     }
@@ -133,7 +136,9 @@ DWORD WINAPI NamedPipeServer::Read() {
     while (mIsRun) {
         //Read client requests from the pipe. This simplistic code only allows messages
         //up to BUFSIZE characters in length.
-        std::cout << "NamedPipeServer::Read, about to read from pipe." << std::endl;
+        std::string logMessage = fmt::format("Read() about to read from pipe {}", Utils::wstringToString(mPipeName));
+        pLogger->debug(logMessage);
+        std::cout << logMessage << std::endl;
 
         fSuccess = ReadFile(
             mHPipe,        // handle to pipe
@@ -144,14 +149,20 @@ DWORD WINAPI NamedPipeServer::Read() {
 
         if (!fSuccess || cbBytesRead == 0) {
             if (GetLastError() == ERROR_BROKEN_PIPE) {
-                std::cout << "NamedPipeServer::Read, client disconnected." << std::endl;
+                std::string logMessage = fmt::format("Read() client disconnected");
+                pLogger->info(logMessage);
+                std::cout << logMessage << std::endl;
             } else {
-                std::cout << "NamedPipeServer::Read, ReadFile failed, GLE=" << GetLastError() << std::endl;
+                std::string errorMessage = fmt::format("Read() Reading from file failed, error: {}", GetLastError());
+                std::cout << errorMessage << std::endl;
+                pLogger->error(errorMessage);
             }
             break;
         }
 
-        std::cout << "NamedPipeServer::Read, read from pipe complete." << std::endl;
+        logMessage = fmt::format("Read() read from pipe complete.");
+        pLogger->debug(logMessage);
+        std::cout << logMessage << std::endl;
 
         //Process the incoming message.
         std::string request = Utils::wstringToString(pchRequest);
@@ -161,8 +172,16 @@ DWORD WINAPI NamedPipeServer::Read() {
             if (!response.empty()) {
                 try {
                     sendResponse(response.c_str());
+
+                    logMessage = fmt::format("Read() send response to client: {}", response);
+                    pLogger->debug(logMessage);
+                    std::cout << logMessage << std::endl;
+
                 } catch (std::runtime_error& e) {
-                    std::cout << "ERROR DURING SENDING RESPONSE FROM NamedPipeServer: " << e.what() << "\n";
+                    std::string errorMessage = fmt::format("Read() failed sending response, error: {}", e.what());
+                    std::cout << errorMessage << std::endl;
+                    pLogger->error(errorMessage);
+
                     return -1;
                 }
             }
@@ -175,6 +194,10 @@ DWORD WINAPI NamedPipeServer::Read() {
     FlushFileBuffers(mHPipe);
     DisconnectNamedPipe(mHPipe);
     CloseHandle(mHPipe);
+
+    std::string logMessage = fmt::format("Read() Disconnecting and closing ther pipe.");
+    pLogger->info(logMessage);
+    std::cout << logMessage << std::endl;
 
     HeapFree(hHeap, 0, pchRequest);
     HeapFree(hHeap, 0, pchReply);
@@ -198,8 +221,10 @@ void NamedPipeServer::sendResponse(const char *responseMessage) {
         NULL);        // not overlapped I/O
 
     if (!fSuccess || cbReplyBytes != cbWritten) {
-        std::cout << "NamedPipeServer::Read, WriteFile failed, GLE=" << GetLastError() << std::endl;
-        std::string errorTxt = "NamedPipeServer::sendResponse() failed, GLE=" + std::to_string(GetLastError());
-        throw std::runtime_error(errorTxt);
+        std::string errorMessage = fmt::format("sendResponse() failed, error: {}", GetLastError());
+        std::cout << errorMessage << std::endl;
+        pLogger->error(errorMessage);
+
+        throw std::runtime_error(errorMessage);
     }
 }

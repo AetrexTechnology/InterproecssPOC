@@ -7,7 +7,6 @@
 #include <atomic>
 #include <windows.h>
 
-
 class NamedPipeServer final {
 public:
     struct RequestHandlerInterface {
@@ -32,5 +31,6 @@ private:
     HANDLE mHPipe;
     RequestHandlerInterface* mRequestHandler;
     std::atomic<bool> mIsRun;
+    std::shared_ptr<spdlog::logger> pLogger;
 };
 

@@ -11,4 +11,5 @@ public:
 private:
     std::wstring mPipeName;
     HANDLE mHPipe;
+    std::shared_ptr<spdlog::logger> pLogger;
 };
